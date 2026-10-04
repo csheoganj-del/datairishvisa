@@ -1,0 +1,213 @@
+@import "tailwindcss";
+
+/* =============================================================================
+   THE IRISH RECORD — Design System
+   Editorial investigative publication
+   ============================================================================= */
+
+@layer base {
+  :root {
+    /* Colour tokens */
+    --color-bg: #F5F3EE;
+    --color-bg-muted: #EAE7E0;
+    --color-bg-dark: #111310;
+    --color-bg-dark-secondary: #1A1D18;
+    --color-text: #111111;
+    --color-text-secondary: #4B4B47;
+    --color-text-muted: #6B6B66;
+    --color-text-inverse: #F5F3EE;
+    --color-accent: #8B3A3A;
+    --color-accent-rust: #9E4F2F;
+    --color-accent-light: #C4706A;
+    --color-border: #D8D4CB;
+    --color-border-strong: #B8B4AC;
+    --color-success: #2D6A4F;
+    --color-warning: #B5802A;
+    --color-verified: #2A5D45;
+    --color-self-reported: #6B6B40;
+    --color-official: #1A3A5C;
+
+    /* Data colours — accessible, restrained */
+    --color-data-1: #8B3A3A;
+    --color-data-2: #2A5D8F;
+    --color-data-3: #4A7C59;
+    --color-data-4: #7A6522;
+    --color-data-5: #5A3D7A;
+    --color-data-neutral: #4B4B47;
+
+    /* Typography */
+    --font-serif: 'Playfair Display', 'Georgia', 'Times New Roman', serif;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+    --space-3xl: 4rem;
+    --space-4xl: 6rem;
+
+    /* Border radius */
+    --radius-sm: 2px;
+    --radius-md: 4px;
+    --radius-lg: 6px;
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+  h2 { font-size: clamp(1.5rem, 3.5vw, 2.5rem); }
+  h3 { font-size: clamp(1.25rem, 2.5vw, 1.875rem); }
+  h4 { font-size: clamp(1.1rem, 2vw, 1.5rem); }
+
+  p { max-width: 70ch; line-height: 1.7; }
+
+  a { color: inherit; text-decoration: none; }
+
+  img { max-width: 100%; height: auto; }
+
+  .skip-nav {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .skip-nav:focus {
+    position: static;
+    left: auto;
+    width: auto;
+    height: auto;
+    padding: 0.5rem 1rem;
+    background: var(--color-text);
+    color: var(--color-text-inverse);
+    font-size: 0.875rem;
+    z-index: 1000;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  ::selection {
+    background-color: rgba(139, 58, 58, 0.15);
+    color: var(--color-text);
+  }
+}
+
+/* ============================================================================= */
+
+.container-editorial {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container-editorial {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-editorial {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+.font-serif { font-family: var(--font-serif); }
+.font-sans { font-family: var(--font-sans); }
+
+.badge-self-reported {
+  background: rgba(107, 107, 64, 0.12);
+  color: #4A4A2A;
+  border: 1px solid rgba(107, 107, 64, 0.3);
+}
+.badge-document-verified {
+  background: rgba(42, 93, 69, 0.12);
+  color: var(--color-verified);
+  border: 1px solid rgba(42, 93, 69, 0.3);
+}
+.badge-official-record {
+  background: rgba(26, 58, 92, 0.12);
+  color: var(--color-official);
+  border: 1px solid rgba(26, 58, 92, 0.3);
+}
+
+.section-dark {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-inverse);
+}
+.section-dark h1,
+.section-dark h2,
+.section-dark h3 {
+  color: var(--color-text-inverse);
+}
+
+.divider-editorial {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 0;
+}
+.divider-editorial-strong {
+  border: none;
+  border-top: 2px solid var(--color-text);
+  margin: 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
