@@ -17,6 +17,17 @@ const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
   },
+  async redirects() {
+    return [
+      { source: '/submit', destination: '/report', permanent: true },
+      { source: '/family-separation', destination: '/family-status', permanent: true },
+      { source: '/eu-vs-non-eu', destination: '/rights-gap', permanent: true },
+      { source: '/stories', destination: '/cases', permanent: true },
+      { source: '/visa-tracker', destination: '/family-status', permanent: true },
+      { source: '/refusals', destination: '/rights-gap', permanent: true },
+      { source: '/stamp-4', destination: '/rights-gap', permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;
