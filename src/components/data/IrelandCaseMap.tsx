@@ -1,23 +1,59 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { caseRepository, CountyReportStats } from '@/lib/repositories';
 import { VerificationPill } from '@/components/ui/VerificationPill';
 
-const COUNTIES = [
-  { name: 'Dublin', count: 487, x: 74, y: 48 },
-  { name: 'Cork', count: 114, x: 38, y: 78 },
-  { name: 'Galway', count: 68, x: 36, y: 46 },
-  { name: 'Limerick', count: 45, x: 38, y: 62 },
-  { name: 'Waterford', count: 28, x: 62, y: 74 },
-  { name: 'Kildare', count: 32, x: 68, y: 52 },
-  { name: 'Louth', count: 24, x: 72, y: 38 },
-  { name: 'Donegal', count: 19, x: 48, y: 18 },
+interface CountyConfig {
+  name: string;
+  count: number;
+}
+
+const INITIAL_COUNTIES: CountyConfig[] = [
+  { name: 'Dublin', count: 487 },
+  { name: 'Cork', count: 114 },
+  { name: 'Galway', count: 68 },
+  { name: 'Limerick', count: 45 },
+  { name: 'Waterford', count: 28 },
+  { name: 'Kildare', count: 32 },
+  { name: 'Louth', count: 24 },
+  { name: 'Donegal', count: 19 },
 ];
 
 export function IrelandCaseMap() {
   const [selectedCounty, setSelectedCounty] = useState<string>('Dublin');
-  const stats: CountyReportStats = caseRepository.getCountyStats(selectedCounty);
+  const [counties, setCounties] = useState<CountyConfig[]>(INITIAL_COUNTIES);
+  const [stats, setStats] = useState<CountyReportStats>(caseRepository.getCountyStats('Dublin'));
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchCountyData(cName: string) {
+      try {
+        const res = await fetch(`/api/stats?county=${encodeURIComponent(cName)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success && isMounted) {
+          if (data.countyStats) {
+            setStats(data.countyStats);
+            setCounties((prev) =>
+              prev.map((c) =>
+                c.name.toLowerCase() === cName.toLowerCase()
+                  ? { ...c, count: data.countyStats.totalReports }
+                  : c
+              )
+            );
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load county stats from API:', err);
+      }
+    }
+
+    fetchCountyData(selectedCounty);
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedCounty]);
 
   return (
     <div style={{ backgroundColor: '#FFFFFF', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '2rem' }}>
@@ -44,7 +80,7 @@ export function IrelandCaseMap() {
             Select County to View Incident Breakdown
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
-            {COUNTIES.map((c) => {
+            {counties.map((c) => {
               const isSelected = selectedCounty.toLowerCase() === c.name.toLowerCase();
               return (
                 <button

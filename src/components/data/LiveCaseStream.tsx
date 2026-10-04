@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { VerificationPill } from '@/components/ui/VerificationPill';
+import { CitizenCase } from '@/types';
 
 interface LiveCaseItem {
   profession: string;
@@ -14,7 +15,7 @@ interface LiveCaseItem {
   status: 'documented_case' | 'user_reported';
 }
 
-const LIVE_STREAM_CASES: LiveCaseItem[] = [
+const DEFAULT_STREAM_CASES: LiveCaseItem[] = [
   {
     profession: 'STAFF NURSE',
     county: 'DUBLIN',
@@ -54,6 +55,40 @@ const LIVE_STREAM_CASES: LiveCaseItem[] = [
 ];
 
 export function LiveCaseStream() {
+  const [cases, setCases] = useState<LiveCaseItem[]>(DEFAULT_STREAM_CASES);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadLatestCases() {
+      try {
+        const res = await fetch('/api/reports?limit=4');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success && Array.isArray(data.cases) && data.cases.length > 0) {
+          const mapped: LiveCaseItem[] = data.cases.map((c: CitizenCase) => ({
+            profession: (c.subcategory || 'RESIDENT').toUpperCase(),
+            county: (c.county_public || 'DUBLIN').toUpperCase(),
+            timeInIreland: c.immigration_permission || 'Resident in Ireland',
+            category: c.category || 'Administrative Delay',
+            waitingDays: c.waiting_days || 0,
+            familyNote: c.public_summary || 'Citizen case documented.',
+            status: c.verification_status === 'documented_case' ? 'documented_case' : 'user_reported',
+          }));
+          if (isMounted) {
+            setCases(mapped);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load live case stream:', err);
+      }
+    }
+
+    loadLatestCases();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <section style={{ backgroundColor: '#FFFFFF', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '2.5rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
@@ -80,7 +115,7 @@ export function LiveCaseStream() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-        {LIVE_STREAM_CASES.map((item, idx) => (
+        {cases.map((item, idx) => (
           <div
             key={idx}
             style={{

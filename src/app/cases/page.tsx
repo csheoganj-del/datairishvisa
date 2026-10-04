@@ -1,17 +1,64 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { VerificationPill } from '@/components/ui/VerificationPill';
 import { VERIFIED_CITIZEN_CASES } from '@/lib/official-data';
+import { CitizenCase } from '@/types';
 
 export default function CasesPage() {
   const [filterIssue, setFilterIssue] = useState('ALL');
   const [filterCounty, setFilterCounty] = useState('ALL');
+  const [cases, setCases] = useState<CitizenCase[]>(VERIFIED_CITIZEN_CASES);
+  const [stats, setStats] = useState({
+    totalSubmitted: 412,
+    documentedCases: 184,
+    medianReportedWaitDays: 594,
+    childrenAffectedTotal: 248,
+  });
 
-  const filteredCases = VERIFIED_CITIZEN_CASES.filter((c) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCasesAndStats() {
+      try {
+        const [repRes, statRes] = await Promise.all([
+          fetch('/api/reports'),
+          fetch('/api/stats'),
+        ]);
+
+        if (repRes.ok) {
+          const repData = await repRes.json();
+          if (repData.success && Array.isArray(repData.cases) && repData.cases.length > 0 && isMounted) {
+            setCases(repData.cases);
+          }
+        }
+
+        if (statRes.ok) {
+          const statData = await statRes.json();
+          if (statData.success && statData.aggregates && isMounted) {
+            setStats({
+              totalSubmitted: statData.aggregates.totalSubmitted || 412,
+              documentedCases: statData.aggregates.documentedCases || 184,
+              medianReportedWaitDays: statData.aggregates.medianReportedWaitDays || 594,
+              childrenAffectedTotal: statData.aggregates.childrenAffectedTotal || 248,
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch dynamic cases/stats:', err);
+      }
+    }
+
+    loadCasesAndStats();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredCases = cases.filter((c) => {
     if (filterIssue !== 'ALL' && !c.category.toLowerCase().includes(filterIssue.toLowerCase())) return false;
-    if (filterCounty !== 'ALL' && c.county_public !== filterCounty) return false;
+    if (filterCounty !== 'ALL' && c.county_public.toLowerCase() !== filterCounty.toLowerCase()) return false;
     return true;
   });
 
@@ -62,7 +109,7 @@ export default function CasesPage() {
               CASES SUBMITTED
             </span>
             <div style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 800, color: 'var(--color-text)' }}>
-              412
+              {stats.totalSubmitted}
             </div>
             <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>Active public registry</span>
           </div>
@@ -72,7 +119,7 @@ export default function CasesPage() {
               DOCUMENT VERIFIED
             </span>
             <div style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 800, color: '#2D6A4F' }}>
-              184
+              {stats.documentedCases}
             </div>
             <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>Primary docs audited</span>
           </div>
@@ -82,9 +129,9 @@ export default function CasesPage() {
               MEDIAN REPORTED WAIT
             </span>
             <div style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 800, color: 'var(--color-accent)' }}>
-              594 Days
+              {stats.medianReportedWaitDays} Days
             </div>
-            <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>~19.5 months backlog</span>
+            <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>~{Math.round(stats.medianReportedWaitDays / 30.5)} months backlog</span>
           </div>
 
           <div style={{ backgroundColor: '#FFFFFF', padding: '1.25rem', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
@@ -92,42 +139,11 @@ export default function CasesPage() {
               CHILDREN AFFECTED
             </span>
             <div style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 800, color: 'var(--color-text)' }}>
-              248
+              {stats.childrenAffectedTotal}
             </div>
             <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>Across verified submissions</span>
           </div>
         </div>
-
-        {/* Case Map Aggregates by County */}
-        <section style={{ backgroundColor: '#FFFFFF', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '1.75rem', marginBottom: '3.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
-              Geographic Distribution of Reported Cases (County Aggregates)
-            </h3>
-            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-              Aggregated to county level to guarantee submitter privacy
-            </span>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', textAlign: 'center' }}>
-            <div style={{ padding: '0.75rem', backgroundColor: 'var(--color-bg-muted)', borderRadius: '2px' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Dublin</div>
-              <strong style={{ fontSize: '1.25rem' }}>241</strong>
-            </div>
-            <div style={{ padding: '0.75rem', backgroundColor: 'var(--color-bg-muted)', borderRadius: '2px' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Cork</div>
-              <strong style={{ fontSize: '1.25rem' }}>83</strong>
-            </div>
-            <div style={{ padding: '0.75rem', backgroundColor: 'var(--color-bg-muted)', borderRadius: '2px' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Galway</div>
-              <strong style={{ fontSize: '1.25rem' }}>51</strong>
-            </div>
-            <div style={{ padding: '0.75rem', backgroundColor: 'var(--color-bg-muted)', borderRadius: '2px' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Limerick</div>
-              <strong style={{ fontSize: '1.25rem' }}>37</strong>
-            </div>
-          </div>
-        </section>
 
         {/* Filters */}
         <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -160,6 +176,10 @@ export default function CasesPage() {
               <option value="Cork">Cork</option>
               <option value="Galway">Galway</option>
               <option value="Limerick">Limerick</option>
+              <option value="Waterford">Waterford</option>
+              <option value="Kildare">Kildare</option>
+              <option value="Louth">Louth</option>
+              <option value="Donegal">Donegal</option>
             </select>
           </div>
         </div>
@@ -168,7 +188,7 @@ export default function CasesPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {filteredCases.map((c) => (
             <div
-              key={c.id}
+              key={c.id || c.public_case_id}
               style={{
                 backgroundColor: '#FFFFFF',
                 border: '1px solid var(--color-border)',

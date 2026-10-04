@@ -1,10 +1,35 @@
 'use client';
 
-import React from 'react';
-import { audienceRepository } from '@/lib/repositories';
+import React, { useEffect, useState } from 'react';
+import { audienceRepository, AudienceStats } from '@/lib/repositories';
 
 export function AudienceCounter() {
-  const stats = audienceRepository.getAudienceMetrics();
+  const [stats, setStats] = useState<AudienceStats>(audienceRepository.getAudienceMetrics());
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadLiveAudienceStats() {
+      try {
+        const res = await fetch('/api/stats');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success && data.audience && isMounted) {
+          setStats((prev) => ({
+            ...prev,
+            reportsSubmitted: data.audience.reportsSubmitted || prev.reportsSubmitted,
+            casesDocumented: data.audience.casesDocumented || prev.casesDocumented,
+          }));
+        }
+      } catch (err) {
+        console.warn('Could not load live audience stats:', err);
+      }
+    }
+
+    loadLiveAudienceStats();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div style={{ backgroundColor: 'var(--color-bg-dark)', color: '#FFFFFF', padding: '2rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)' }}>
